@@ -1,0 +1,2 @@
+- pipeline.id: airquality_pipeline
+  path.config: "/usr/share/logstash/pipeline/airquality.conf"  # 투표 데이터 파이프라인
