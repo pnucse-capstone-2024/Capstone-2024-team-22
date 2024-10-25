@@ -1,0 +1,57 @@
+.chaincode-templates-page-container {
+    font-family: Arial, sans-serif;
+    width: 1450px;
+    margin: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .templates-list {
+    list-style: none;
+    padding: 0;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .template-item {
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .template-item:hover {
+    background-color: #d4d4d4;
+  }
+  
+  .template-details {
+    margin-top: 20px;
+  }
+  
+  .template-content-container {
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    white-space: pre-wrap;
+  }
+  
+  .function-block {
+    margin-bottom: 15px;
+  }
+  
+  .function-textarea {
+    width: 1385px;
+    height: 300px;
+    font-family: monospace;
+    font-size: 14px;
+    resize: none;
+    overflow: auto;
+  }
+  

@@ -1,0 +1,360 @@
+services:  # Docker Compose의 서비스 정의 시작
+
+  orderer.data-collector.com:  # Orderer 서비스 정의
+    container_name: orderer.data-collector.com  # 컨테이너 이름 설정
+    image: hyperledger/fabric-orderer:latest  # 사용할 도커 이미지 설정
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:  # Orderer 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - ORDERER_GENERAL_LOGLEVEL=info  # 로그 레벨 설정
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0  # Orderer가 바인딩할 주소
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=file  # 부트스트랩 방식 설정 (파일)
+      - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/orderer/orderer.genesis.block  # 제네시스 블록 파일 경로
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP  # Orderer의 MSP ID 설정
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp  # MSP 디렉터리 경로
+      - ORDERER_GENERAL_TLS_ENABLED=true  # TLS 사용 설정
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key  # TLS 프라이빗 키 파일 경로
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt  # TLS 인증서 파일 경로
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]  # TLS 루트 인증서 경로
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric  # 컨테이너의 작업 디렉터리 설정
+    command: orderer  # 컨테이너 실행 시 사용할 명령어
+    volumes:  # 호스트와 컨테이너 간에 공유할 디렉터리 설정
+        - /var/run/:/host/var/run/
+        - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block  # 제네시스 블록 파일 공유
+        - ./crypto-config/ordererOrganizations/data-collector.com/orderers/orderer.data-collector.com/msp:/var/hyperledger/orderer/msp  # MSP 디렉터리 공유
+        - ./crypto-config/ordererOrganizations/data-collector.com/orderers/orderer.data-collector.com/tls:/var/hyperledger/orderer/tls  # TLS 디렉터리 공유
+        - orderer.data-collector.com:/var/hyperledger/production/orderer  # Orderer 데이터 디렉터리 공유
+    ports:  # 호스트와 컨테이너 간에 매핑할 포트 설정
+      - 7050:7050  # 호스트의 7050 포트를 컨테이너의 7050 포트와 매핑
+    networks:  # 컨테이너가 연결될 네트워크 설정
+      basic:
+        aliases:
+          - orderer.data-collector.com
+
+
+  ca.org1.data-collector.com:  # Org1의 CA 서비스 정의
+    image: hyperledger/fabric-ca:latest  # 사용할 도커 이미지 설정
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:  # CA 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server  # CA 서버 홈 디렉터리 설정
+      - FABRIC_CA_SERVER_CA_NAME=ca-org1  # CA 서버 이름 설정
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.data-collector.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true  # TLS 사용 설정
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.data-collector.com-cert.pem  # TLS 인증서 파일 경로
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk  # TLS 프라이빗 키 파일 경로
+    ports:  # 호스트와 컨테이너 간에 매핑할 포트 설정
+      - "7054:7054"  # 호스트의 7054 포트를 컨테이너의 7054 포트와 매핑
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'  # CA 서버 시작 명령어
+    volumes:  # 호스트와 컨테이너 간에 공유할 디렉터리 설정
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org1.data-collector.com/ca/:/etc/hyperledger/fabric-ca-server-config  # CA 서버 구성 파일 디렉터리 공유
+    container_name: ca.org1.data-collector.com  # 컨테이너 이름 설정
+    networks:  # 컨테이너가 연결될 네트워크 설정
+      basic:
+        aliases:
+          - ca.org1.data-collector.com
+
+  ca.org2.data-collector.com:  # Org2의 CA 서비스 정의
+    image: hyperledger/fabric-ca:latest  # 사용할 도커 이미지 설정
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:  # CA 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server  # CA 서버 홈 디렉터리 설정
+      - FABRIC_CA_SERVER_CA_NAME=ca-org2  # CA 서버 이름 설정
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.data-collector.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true  # TLS 사용 설정
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.data-collector.com-cert.pem  # TLS 인증서 파일 경로
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk  # TLS 프라이빗 키 파일 경로
+    ports:  # 호스트와 컨테이너 간에 매핑할 포트 설정
+      - "8054:7054"  # 호스트의 8054 포트를 컨테이너의 7054 포트와 매핑
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'  # CA 서버 시작 명령어
+    volumes:  # 호스트와 컨테이너 간에 공유할 디렉터리 설정
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org2.data-collector.com/ca/:/etc/hyperledger/fabric-ca-server-config  # CA 서버 구성 파일 디렉터리 공유
+    container_name: ca.org2.data-collector.com  # 컨테이너 이름 설정
+    networks:  # 컨테이너가 연결될 네트워크 설정
+      basic:
+        aliases:
+          - ca.org2.data-collector.com
+
+  ca.org3.data-collector.com:  # Org3의 CA 서비스 정의
+    image: hyperledger/fabric-ca:latest  # 사용할 도커 이미지 설정
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:  # CA 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server  # CA 서버 홈 디렉터리 설정
+      - FABRIC_CA_SERVER_CA_NAME=ca-org3  # CA 서버 이름 설정
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org3.data-collector.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true  # TLS 사용 설정
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org3.data-collector.com-cert.pem  # TLS 인증서 파일 경로
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk  # TLS 프라이빗 키 파일 경로
+    ports:  # 호스트와 컨테이너 간에 매핑할 포트 설정
+      - "11054:7054"  # 호스트의 11054 포트를 컨테이너의 7054 포트와 매핑
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'  # CA 서버 시작 명령어
+    volumes:  # 호스트와 컨테이너 간에 공유할 디렉터리 설정
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org3.data-collector.com/ca/:/etc/hyperledger/fabric-ca-server-config  # CA 서버 구성 파일 디렉터리 공유
+    container_name: ca.org3.data-collector.com  # 컨테이너 이름 설정
+    networks:  # 컨테이너가 연결될 네트워크 설정
+      basic:
+        aliases:
+          - ca.org3.data-collector.com
+
+  peer0.org1.data-collector.com: # Org1의 peer0 서비스 정의 시작
+    container_name: peer0.org1.data-collector.com # peer0 컨테이너 이름
+    image: hyperledger/fabric-peer:latest # peer0 컨테이너에 사용할 이미지
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment: # peer0 컨테이너의 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.org1.data-collector.com # peer0의 ID 설정
+      - CORE_PEER_ADDRESS=peer0.org1.data-collector.com:7051 # peer0의 주소 설정
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051 # peer0의 리슨 주소 설정
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.data-collector.com:7052 # 체인코드 주소 설정
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052 # 체인코드 리슨 주소 설정
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org1.data-collector.com:8051 # gossip 부트스트랩 주소 설정 (앵커피어가 아닌 경우)
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.data-collector.com:7051 # 외부 gossip 엔드포인트 설정
+      - CORE_PEER_LOCALMSPID=Org1MSP # peer0의 MSP ID 설정
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp # peer0의 MSP 구성 경로 설정
+      - CORE_PEER_TLS_ENABLED=true # TLS 사용 설정
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt # TLS 인증서 파일 경로
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key # TLS 키 파일 경로
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt # TLS 루트 인증서 파일 경로
+    volumes: # 호스트와 컨테이너 간의 볼륨 설정
+        - /var/run/:/host/var/run/
+        #- /var/run/docker.sock:/var/run/docker.sock
+        - ./crypto-config/peerOrganizations/org1.data-collector.com/peers/peer0.org1.data-collector.com/msp:/etc/hyperledger/fabric/msp # MSP 디렉토리 볼륨
+        - ./crypto-config/peerOrganizations/org1.data-collector.com/peers/peer0.org1.data-collector.com/tls:/etc/hyperledger/fabric/tls # TLS 디렉토리 볼륨
+        - peer0.org1.data-collector.com:/var/hyperledger/production # peer0 데이터 볼륨
+    ports: # 호스트와 컨테이너 간의 포트 설정
+      - 7051:7051 # peer0의 포트 매핑
+      - 7052:7052 # 체인코드 포트 매핑
+    networks: # peer0가 속할 네트워크 설정
+      basic:
+        aliases:
+          - peer0.org1.data-collector.com
+
+  peer1.org1.data-collector.com: # Org1의 peer1 서비스 정의 시작
+    container_name: peer1.org1.data-collector.com # peer1 컨테이너 이름
+    image: hyperledger/fabric-peer:latest # peer1 컨테이너에 사용할 이미지
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment: # peer1 컨테이너의 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer1.org1.data-collector.com # peer1의 ID 설정
+      - CORE_PEER_ADDRESS=peer1.org1.data-collector.com:8051 # peer1의 주소 설정
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051 # peer1의 리슨 주소 설정
+      - CORE_PEER_CHAINCODEADDRESS=peer1.org1.data-collector.com:8052 # 체인코드 주소 설정
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052 # 체인코드 리슨 주소 설정
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.data-collector.com:7051 # gossip 부트스트랩 주소 설정 (앵커피어가 아닌 경우)
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.data-collector.com:8051 # 외부 gossip 엔드포인트 설정
+      - CORE_PEER_LOCALMSPID=Org1MSP # peer1의 MSP ID 설정
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp # peer1의 MSP 구성 경로 설정
+      - CORE_PEER_TLS_ENABLED=true # TLS 사용 설정
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt # TLS 인증서 파일 경로
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key # TLS 키 파일 경로
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt # TLS 루트 인증서 파일 경로
+    volumes: # 호스트와 컨테이너 간의 볼륨 설정
+        - /var/run/:/host/var/run/
+        #- /var/run/docker.sock:/var/run/docker.sock
+        - ./crypto-config/peerOrganizations/org1.data-collector.com/peers/peer1.org1.data-collector.com/msp:/etc/hyperledger/fabric/msp # MSP 디렉토리 볼륨
+        - ./crypto-config/peerOrganizations/org1.data-collector.com/peers/peer1.org1.data-collector.com/tls:/etc/hyperledger/fabric/tls # TLS 디렉토리 볼륨
+        - peer1.org1.data-collector.com:/var/hyperledger/production # peer1 데이터 볼륨
+    ports: # 호스트와 컨테이너 간의 포트 설정
+      - 8051:8051 # peer1의 포트 매핑
+      - 8052:8052 # 체인코드 포트 매핑
+    networks: # peer1이 속할 네트워크 설정
+      basic:
+        aliases:
+          - peer1.org1.data-collector.com
+
+  peer0.org2.data-collector.com: # Org2의 peer0 서비스 정의 시작
+    container_name: peer0.org2.data-collector.com # peer0 컨테이너 이름    
+    image: hyperledger/fabric-peer:latest # peer0 컨테이너에 사용할 이미지
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment: # peer0 컨테이너의 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.org2.data-collector.com # peer0의 ID 설정
+      - CORE_PEER_ADDRESS=peer0.org2.data-collector.com:9051 # peer0의 주소 설정
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051 # peer0의 리슨 주소 설정
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org2.data-collector.com:9052 # 체인코드 주소 설정
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052 # 체인코드 리슨 주소 설정
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org2.data-collector.com:10051 # gossip 부트스트랩 주소 설정 (앵커피어가 아닌 경우)
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.data-collector.com:9051 # 외부 gossip 엔드포인트 설정
+      - CORE_PEER_LOCALMSPID=Org2MSP # peer0의 MSP ID 설정
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp # peer0의 MSP 구성 경로 설정
+      - CORE_PEER_TLS_ENABLED=true # TLS 사용 설정
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt # TLS 인증서 파일 경로
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key # TLS 키 파일 경로
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt # TLS 루트 인증서 파일 경로
+    volumes: # 호스트와 컨테이너 간의 볼륨 설정
+        - /var/run/:/host/var/run/
+        #- /var/run/docker.sock:/var/run/docker.sock
+        - ./crypto-config/peerOrganizations/org2.data-collector.com/peers/peer0.org2.data-collector.com/msp:/etc/hyperledger/fabric/msp # MSP 디렉토리 볼륨
+        - ./crypto-config/peerOrganizations/org2.data-collector.com/peers/peer0.org2.data-collector.com/tls:/etc/hyperledger/fabric/tls # TLS 디렉토리 볼륨
+        - peer0.org2.data-collector.com:/var/hyperledger/production # peer0 데이터 볼륨
+    ports: # 호스트와 컨테이너 간의 포트 설정
+      - 9051:9051 # peer0의 포트 매핑
+      - 9052:9052 # 체인코드 포트 매핑
+    networks: # peer0가 속할 네트워크 설정
+      basic:
+        aliases:
+          - peer0.org2.data-collector.com
+
+  peer1.org2.data-collector.com: # Org2의 peer1 서비스 정의 시작
+    container_name: peer1.org2.data-collector.com # peer1 컨테이너 이름
+    image: hyperledger/fabric-peer:latest # peer1 컨테이너에 사용할 이미지
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment: # peer1 컨테이너의 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer1.org2.data-collector.com # peer1의 ID 설정
+      - CORE_PEER_ADDRESS=peer1.org2.data-collector.com:10051 # peer1의 주소 설정
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:10051 # peer1의 리슨 주소 설정
+      - CORE_PEER_CHAINCODEADDRESS=peer1.org2.data-collector.com:10052 # 체인코드 주소 설정
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052 # 체인코드 리슨 주소 설정
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.data-collector.com:9051 # gossip 부트스트랩 주소 설정 (앵커피어가 아닌 경우)
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.data-collector.com:10051 # 외부 gossip 엔드포인트 설정
+      - CORE_PEER_LOCALMSPID=Org2MSP # peer1의 MSP ID 설정
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp # peer1의 MSP 구성 경로 설정
+      - CORE_PEER_TLS_ENABLED=true # TLS 사용 설정
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt # TLS 인증서 파일 경로
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key # TLS 키 파일 경로
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt # TLS 루트 인증서 파일 경로
+    volumes: # 호스트와 컨테이너 간의 볼륨 설정
+        - /var/run/:/host/var/run/
+        #- /var/run/docker.sock:/var/run/docker.sock
+        - ./crypto-config/peerOrganizations/org2.data-collector.com/peers/peer1.org2.data-collector.com/msp:/etc/hyperledger/fabric/msp # MSP 디렉토리 볼륨
+        - ./crypto-config/peerOrganizations/org2.data-collector.com/peers/peer1.org2.data-collector.com/tls:/etc/hyperledger/fabric/tls # TLS 디렉토리 볼륨
+        - peer1.org2.data-collector.com:/var/hyperledger/production # peer1 데이터 볼륨
+    ports: # 호스트와 컨테이너 간의 포트 설정
+      - 10051:10051 # peer1의 포트 매핑
+      - 10052:10052 # 체인코드 포트 매핑
+    networks: # peer1이 속할 네트워크 설정
+      basic:
+        aliases:
+          - peer1.org2.data-collector.com
+
+  peer0.org3.data-collector.com: # Org3의 peer0 서비스 정의 시작
+    container_name: peer0.org3.data-collector.com # peer0 컨테이너 이름
+    image: hyperledger/fabric-peer:latest # peer0 컨테이너에 사용할 이미지
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment: # peer0 컨테이너의 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.org3.data-collector.com # peer0의 ID 설정
+      - CORE_PEER_ADDRESS=peer0.org3.data-collector.com:11051 # peer0의 주소 설정
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:11051 # peer0의 리슨 주소 설정
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org3.data-collector.com:11052 # 체인코드 주소 설정
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:11052 # 체인코드 리슨 주소 설정
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org3.data-collector.com:12051 # gossip 부트스트랩 주소 설정 (앵커피어가 아닌 경우)
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org3.data-collector.com:11051 # 외부 gossip 엔드포인트 설정
+      - CORE_PEER_LOCALMSPID=Org3MSP # peer0의 MSP ID 설정
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp # peer0의 MSP 구성 경로 설정
+      - CORE_PEER_TLS_ENABLED=true # TLS 사용 설정
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt # TLS 인증서 파일 경로
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key # TLS 키 파일 경로
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt # TLS 루트 인증서 파일 경로
+    volumes: # 호스트와 컨테이너 간의 볼륨 설정
+        - /var/run/:/host/var/run/
+        #- /var/run/docker.sock:/var/run/docker.sock
+        - ./crypto-config/peerOrganizations/org3.data-collector.com/peers/peer0.org3.data-collector.com/msp:/etc/hyperledger/fabric/msp # MSP 디렉토리 볼륨
+        - ./crypto-config/peerOrganizations/org3.data-collector.com/peers/peer0.org3.data-collector.com/tls:/etc/hyperledger/fabric/tls # TLS 디렉토리 볼륨
+        - peer0.org3.data-collector.com:/var/hyperledger/production # peer0 데이터 볼륨
+    ports: # 호스트와 컨테이너 간의 포트 설정
+      - 11051:11051 # peer0의 포트 매핑
+      - 11052:11052 # 체인코드 포트 매핑
+    networks: # peer0가 속할 네트워크 설정
+      basic:
+        aliases:
+          - peer0.org3.data-collector.com
+
+  peer1.org3.data-collector.com: # Org3의 peer1 서비스 정의 시작
+    container_name: peer1.org3.data-collector.com # peer1 컨테이너 이름
+    image: hyperledger/fabric-peer:latest # peer1 컨테이너에 사용할 이미지
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment: # peer1 컨테이너의 환경 변수 설정
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer1.org3.data-collector.com # peer1의 ID 설정
+      - CORE_PEER_ADDRESS=peer1.org3.data-collector.com:12051 # peer1의 주소 설정
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:12051 # peer1의 리슨 주소 설정
+      - CORE_PEER_CHAINCODEADDRESS=peer1.org3.data-collector.com:12052 # 체인코드 주소 설정
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:12052 # 체인코드 리슨 주소 설정
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org3.data-collector.com:11051 # gossip 부트스트랩 주소 설정 (앵커피어가 아닌 경우)
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org3.data-collector.com:12051 # 외부 gossip 엔드포인트 설정
+      - CORE_PEER_LOCALMSPID=Org3MSP # peer1의 MSP ID 설정
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp # peer1의 MSP 구성 경로 설정
+      - CORE_PEER_TLS_ENABLED=true # TLS 사용 설정
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt # TLS 인증서 파일 경로
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key # TLS 키 파일 경로
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt # TLS 루트 인증서 파일 경로
+    volumes: # 호스트와 컨테이너 간의 볼륨 설정
+        - /var/run/:/host/var/run/
+        #- /var/run/docker.sock:/var/run/docker.sock
+        - ./crypto-config/peerOrganizations/org3.data-collector.com/peers/peer1.org3.data-collector.com/msp:/etc/hyperledger/fabric/msp # MSP 디렉토리 볼륨
+        - ./crypto-config/peerOrganizations/org3.data-collector.com/peers/peer1.org3.data-collector.com/tls:/etc/hyperledger/fabric/tls # TLS 디렉토리 볼륨
+        - peer1.org3.data-collector.com:/var/hyperledger/production # peer1 데이터 볼륨
+    ports: # 호스트와 컨테이너 간의 포트 설정
+      - 12051:12051 # peer1의 포트 매핑
+      - 12052:12052 # 체인코드 포트 매핑
+    networks: # peer1이 속할 네트워크 설정
+      basic:
+        aliases:
+          - peer1.org3.data-collector.com
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools-with-go:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tty: true
+    stdin_open: true
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock # Docker 데몬 소켓 파일 경로 설정
+      - GOPATH=/opt/gopath
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.org1.data-collector.com:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/org1/users/Admin@org1.data-collector.com/tls/ca.crt
+    # - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto-config/peerOrganizations/org1.data-collector.com/peers/peer0.org1.data-collector.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/org1/users/Admin@org1.data-collector.com/msp
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_basic # 네트워크 모드 설정
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      #- /var/run/docker.sock:/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/org1.data-collector.com:/etc/hyperledger/msp/org1
+      - ./crypto-config/peerOrganizations/org2.data-collector.com:/etc/hyperledger/msp/org2
+      - ./crypto-config/peerOrganizations/org3.data-collector.com:/etc/hyperledger/msp/org3
+      - ./crypto-config:/etc/hyperledger/fabric/crypto-config
+      - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ./crypto-config/ordererOrganizations/data-collector.com/orderers/orderer.data-collector.com/tls:/etc/hyperledger/orderer/tls
+    networks:
+      basic:
+        aliases:
+          - cli
+
+volumes: # 볼륨 정의
+  orderer.data-collector.com: # 오더러 볼륨 정의
+  peer0.org1.data-collector.com: # Org1의 peer0 볼륨 정의
+  peer1.org1.data-collector.com: # Org1의 peer1 볼륨 정의
+  peer0.org2.data-collector.com: # Org2의 peer0 볼륨 정의
+  peer1.org2.data-collector.com: # Org2의 peer1 볼륨 정의
+  peer0.org3.data-collector.com: # Org3의 peer0 볼륨 정의
+  peer1.org3.data-collector.com: # Org3의 peer1 볼륨 정의
+
+networks:  # 네트워크 정의
+  basic:  # 기본 네트워크 이름

@@ -1,0 +1,60 @@
+{
+    "name": "data-collector-network",
+    "version": "1.0.0",
+    "client": {
+        "organization": "Org3",
+        "connection": {
+            "timeout": {
+                "peer": {
+                    "endorser": "300"
+                }
+            }
+        }
+    },
+    "organizations": {
+        "Org3": {
+            "mspid": "Org3MSP",
+            "peers": [
+                "peer0.org3.data-collector.com",
+                "peer1.org3.data-collector.com"
+            ],
+            "certificateAuthorities": [
+                "ca.org3.data-collector.com"
+            ]
+        }
+    },
+    "peers": {
+        "peer0.org3.data-collector.com": {
+            "url": "grpcs://localhost:11051",
+            "tlsCACerts": {
+                "path": "crypto-config/peerOrganizations/org3.data-collector.com/tlsca/tlsca.org3.data-collector.com-cert.pem"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer0.org3.data-collector.com",
+                "hostnameOverride": "peer0.org3.data-collector.com"
+            }
+        },
+        "peer1.org3.data-collector.com": {
+            "url": "grpcs://localhost:12051",
+            "tlsCACerts": {
+                "path": "crypto-config/peerOrganizations/org3.data-collector.com/tlsca/tlsca.org3.data-collector.com-cert.pem"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer1.org3.data-collector.com",
+                "hostnameOverride": "peer1.org3.data-collector.com"
+            }
+        }
+    },
+    "certificateAuthorities": {
+        "ca.org3.data-collector.com": {
+            "url": "https://localhost:11054",
+            "caName": "ca-org3",
+            "tlsCACerts": {
+                "path": "crypto-config/peerOrganizations/org3.data-collector.com/ca/ca.org3.data-collector.com-cert.pem"
+            },
+            "httpOptions": {
+                "verify": false
+            }
+        }
+    }
+}
