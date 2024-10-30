@@ -36,7 +36,7 @@
 
 ### 소개 및 시연 영상
 
-[![부산대학교 정보컴퓨터공학부 소개](http://img.youtube.com/vi/zh_gQ_lmLqE/0.jpg)](https://youtu.be/zh_gQ_lmLqE)
+[![2024년 전기 졸업과제 22 운죽정](http://img.youtube.com/vi/Y4zyB9muWAY/0.jpg)](https://youtu.be/Y4zyB9muWAY)
 
 ### 설치 및 사용법
 1. 소스코드 복제
