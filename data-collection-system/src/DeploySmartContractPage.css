@@ -1,0 +1,67 @@
+.form-container {
+  width: 300px;
+  margin: 555px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  text-align: center; /* 중앙 정렬을 위해 추가 */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 컨테이너를 화면 가운데로 정렬 */
+  justify-content: center; /* 컨텐츠 수직 가운데 정렬 */
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+button {
+  background-image: linear-gradient(to right, #6a11cb, #2575fc);
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 5px 0; /* 버튼 간격 추가 */
+  transition: all 0.3s ease;
+}
+
+button:hover:enabled {
+  background-image: linear-gradient(to right, #2575fc, #6a11cb);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.loader {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

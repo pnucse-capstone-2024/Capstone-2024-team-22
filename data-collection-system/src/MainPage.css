@@ -1,0 +1,64 @@
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%; /* 전체 너비 설정 */
+  background-color: #000000; /* 배경 그라데이션 */
+}
+
+.main-container {
+  display: flex;
+  width: 98vw; /* 전체 화면 너비 */
+  height: 200vw; /* 전체 화면 높이 */
+  box-shadow: none; /* 그림자 제거 */
+  border-radius: 0; /* 곡률 제거 */
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.right-section {
+  flex: 1;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  height: 100%; /* 전체 높이 사용 */
+}
+
+h1 {
+  font-size: 4em; /* 폰트 크기 증가 */
+  color: #2c3e50;
+  margin-bottom: 40px; /* 여백 증가 */
+  text-align: center;
+}
+
+.auth-buttons, .admin-buttons, .user-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px; /* 여백 증가 */
+}
+
+.button {
+  padding: 15px 30px;
+  margin: 15px 0; /* 여백 증가 */
+  font-size: 20px; /* 폰트 크기 증가 */
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  background-image: linear-gradient(to right, #6a11cb, #2575fc);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.button:hover {
+  background-image: linear-gradient(to right, #2575fc, #6a11cb);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}

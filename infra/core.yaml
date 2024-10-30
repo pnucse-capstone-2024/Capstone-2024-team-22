@@ -1,0 +1,240 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+###############################################################################
+#
+#    Peer section
+#
+###############################################################################
+peer:
+
+    # The peer id provides a name for this peer instance and is used when
+    # naming docker resources.
+    id: peer0.org1.data-collector.com
+
+    # The networkId allows for logical separation of networks and is used when
+    # naming docker resources.
+    networkId: data-collector-network
+
+    # The Address at local network interface this Peer will listen on.
+    listenAddress: 0.0.0.0:7051
+
+    # The endpoint this peer uses to listen for inbound chaincode connections.
+    chaincodeListenAddress: 0.0.0.0:7052
+
+    # The endpoint the chaincode for this peer uses to connect to the peer.
+    chaincodeAddress: peer0.org1.data-collector.com:7052
+
+    # When used as peer config, this represents the endpoint to other peers
+    address: peer0.org1.data-collector.com:7051
+
+    # Whether the Peer should programmatically determine its address
+    addressAutoDetect: false
+
+    # Settings for the Peer's gateway server.
+    gateway:
+        enabled: true
+        endorsementTimeout: 30s
+        broadcastTimeout: 30s
+        dialTimeout: 2m
+
+    # Keepalive settings for peer server and clients
+    keepalive:
+        interval: 7200s
+        timeout: 20s
+        minInterval: 60s
+        client:
+            interval: 60s
+            timeout: 20s
+        deliveryClient:
+            interval: 60s
+            timeout: 20s
+
+    # Gossip related configuration
+    gossip:
+        bootstrap: peer1.org1.data-collector.com:8051
+        useLeaderElection: true
+        orgLeader: false
+        endpoint: peer0.org1.data-collector.com:7051
+        maxBlockCountToStore: 10
+        maxPropagationBurstLatency: 10ms
+        maxPropagationBurstSize: 10
+        propagateIterations: 1
+        propagatePeerNum: 3
+        pullInterval: 4s
+        pullPeerNum: 3
+        requestStateInfoInterval: 4s
+        publishStateInfoInterval: 4s
+        dialTimeout: 3s
+        connTimeout: 2s
+        recvBuffSize: 20
+        sendBuffSize: 200
+        digestWaitTime: 1s
+        requestWaitTime: 1500ms
+        responseWaitTime: 2s
+        aliveTimeInterval: 5s
+        aliveExpirationTimeout: 25s
+        reconnectInterval: 25s
+        externalEndpoint: peer0.org1.data-collector.com:7051
+
+    # TLS Settings
+    tls:
+        enabled:  true
+        clientAuthRequired: true
+        cert:
+            file: /etc/hyperledger/fabric/tls/server.crt
+        key:
+            file: /etc/hyperledger/fabric/tls/server.key
+        rootcert:
+            file: /etc/hyperledger/fabric/tls/ca.crt
+        clientRootCAs:
+            files:
+              - /etc/hyperledger/fabric/tls/ca.crt
+        clientKey:
+            file: /etc/hyperledger/fabric/tls/client.key
+        clientCert:
+            file: /etc/hyperledger/fabric/tls/client.crt
+
+    # Path on the file system where peer will store data (eg ledger).
+    fileSystemPath: /var/hyperledger/production
+
+    # BCCSP (Blockchain crypto provider): Select which crypto implementation or
+    # library to use
+    BCCSP:
+        Default: SW
+        SW:
+            Hash: SHA2
+            Security: 256
+            FileKeyStore:
+                KeyStore: /etc/hyperledger/fabric/msp/keystore
+
+    # Path on the file system where peer will find MSP local configurations
+    mspConfigPath: /etc/hyperledger/fabric/msp
+
+    # Identifier of the local MSP
+    localMspId: Org1MSP
+
+    # CLI common client config options
+    client:
+        connTimeout: 3s
+
+    # Delivery service related config
+    deliveryclient:
+        blockGossipEnabled: true
+        reconnectTotalTimeThreshold: 3600s
+        connTimeout: 3s
+        reConnectBackoffThreshold: 3600s
+
+    # Type for the local MSP - by default it's of type bccsp
+    localMspType: bccsp
+
+    # Limits is used to configure some internal resource limits.
+    limits:
+        concurrency:
+            endorserService: 2500
+            deliverService: 2500
+            gatewayService: 500
+
+    # Since all nodes should be consistent it is recommended to keep
+    # the default value of 100MB for MaxRecvMsgSize & MaxSendMsgSize
+    maxRecvMsgSize: 104857600
+    maxSendMsgSize: 104857600
+
+###############################################################################
+#
+#    VM section
+#
+###############################################################################
+vm:
+    endpoint: unix:///host/var/run/docker.sock
+    docker:
+        tls:
+            enabled: false
+        attachStdout: false
+        hostConfig:
+            NetworkMode: host
+            LogConfig:
+                Type: json-file
+                Config:
+                    max-size: "50m"
+                    max-file: "5"
+            Memory: 2147483648
+
+###############################################################################
+#
+#    Chaincode section
+#
+###############################################################################
+chaincode:
+    id:
+        path:
+        name:
+    builder: $(DOCKER_NS)/fabric-ccenv:$(TWO_DIGIT_VERSION)
+    pull: false
+    golang:
+        runtime: $(DOCKER_NS)/fabric-baseos:$(TWO_DIGIT_VERSION)
+        dynamicLink: false
+    java:
+        runtime: $(DOCKER_NS)/fabric-javaenv:$(TWO_DIGIT_VERSION)
+    node:
+        runtime: $(DOCKER_NS)/fabric-nodeenv:$(TWO_DIGIT_VERSION)
+    externalBuilders:
+       - name: ccaas_builder
+         path: /opt/hyperledger/ccaas_builder
+         propagateEnvironment:
+           - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG
+    installTimeout: 300s
+    startuptimeout: 300s
+    executetimeout: 30s
+    mode: dev
+    keepalive: 0
+    system:
+        _lifecycle: enable
+        cscc: enable
+        lscc: enable
+        qscc: enable
+    logging:
+      level:  info
+      shim:   warning
+      format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
+
+###############################################################################
+#
+#    Ledger section - ledger configuration encompasses both the blockchain
+#    and the state
+#
+###############################################################################
+ledger:
+  state:
+    stateDatabase: goleveldb
+    totalQueryLimit: 100000
+  history:
+    enableHistoryDatabase: true
+  snapshots:
+    rootDir: /var/hyperledger/production/snapshots
+
+###############################################################################
+#
+#    Operations section
+#
+###############################################################################
+operations:
+    listenAddress: 127.0.0.1:9443
+    tls:
+        enabled: false
+        clientAuthRequired: false
+
+###############################################################################
+#
+#    Metrics section
+#
+###############################################################################
+metrics:
+    provider: disabled
+    statsd:
+        network: udp
+        address: 127.0.0.1:8125
+        writeInterval: 10s
+        prefix:
